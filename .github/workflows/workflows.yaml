@@ -25,34 +25,31 @@ jobs:
         with:
           submodules: true
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v2
         with:
           distribution: "temurin"
           cache: "gradle"
           java-version: "17"
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v3
         with:
-          node-version: "20"
-          cache: "pnpm"
-      - uses: pnpm/action-setup@v3
+          node-version: 18
+      - uses: pnpm/action-setup@v2.0.1
         name: Install pnpm
         id: pnpm-install
         with:
-          version: latest
+          version: 8
           run_install: false
       - name: Get pnpm store directory
         id: pnpm-cache
         shell: bash
         run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+            echo "::set-output name=pnpm_cache_dir::$(pnpm store path)"
       - name: Setup pnpm cache
-        uses: actions/cache@v4
+        uses: actions/cache@v3
         with:
-          path: |
-            ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-            **/node_modules
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/widget/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
       - name: Install pnpm globally # 全局安装 pnpm
