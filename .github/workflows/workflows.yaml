@@ -100,7 +100,7 @@ jobs:
           echo "artifact_name=${ARTIFACT_NAME}" >> "$GITHUB_OUTPUT"
           echo "release_id=${{ github.event.release.id }}" >> "$GITHUB_OUTPUT"
       - name: Upload a Release Asset
-        uses: actions/github-script@v2
+        uses: actions/github-script@v4
         if: github.event_name == 'release'
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
