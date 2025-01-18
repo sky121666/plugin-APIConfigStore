@@ -1,0 +1,121 @@
+name: Build and Release Halo Plugin
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "**"
+      - "!**.md"
+  release:
+    types:
+      - created
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "**"
+      - "!**.md"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+        with:
+          submodules: true
+      - name: Set up JDK 17
+        uses: actions/setup-java@9704b39bf258b59bc04b50fa2dd55e9ed76b47a8 # v4
+        with:
+          distribution: "temurin"
+          cache: "gradle"
+          java-version: "17"
+      - name: Set up Node.js
+        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+      - uses: pnpm/action-setup@2ec0d735d4f59d7d3d9b70548d5399df90525824 # v3
+        name: Install pnpm
+        id: pnpm-install
+        with:
+          version: latest
+          run_install: false
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+      - name: Setup pnpm cache
+        uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v4
+        with:
+          path: |
+            ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+            **/node_modules
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+      - name: Install Frontend Dependencies
+        run: |
+          ./gradlew :widget:pnpmInstall
+          cd widget
+          pnpm add @formkit/vue pinyin@3
+          cd ..
+          ./gradlew :widget:build
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@417ae3ccd767c252f5661f1ace9f835f9654f2b5 # v3.1.0
+      - name: Build with Gradle
+        run: |
+          # Set the version with tag name when releasing
+          if [[ "$GITHUB_REF_NAME" == v* ]]; then
+            version="${GITHUB_REF_NAME#v}"
+          else
+            version="snapshot-$GITHUB_SHA"
+          fi
+          sed -i "s/version=.*-SNAPSHOT$/version=$version/1" gradle.properties
+          ./gradlew clean build
+      - name: Archive plugin-starter jar
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v4
+        with:
+          name: plugin-starter
+          path: |
+            build/libs/*.jar
+          retention-days: 1
+
+  github-release:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'release'
+    steps:
+      - name: Download plugin-starter jar
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v4
+        with:
+          name: plugin-starter
+          path: build/libs
+      - name: Upload a Release Asset
+        uses: actions/github-script@d55798559fbeb245dffab44d9146f39e289af77d # v7
+        if: github.event_name == 'release'
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs').promises;
+
+            const { repo: { owner, repo }, sha } = context;
+            console.log({ owner, repo, sha });
+
+            const releaseId = context.payload.release.id;
+            const artifactPathName = 'build/libs/';
+
+            const files = await fs.readdir(artifactPathName);
+            for (const file of files) {
+              if (file.endsWith('.jar')) {
+                console.log('Releasing', releaseId, artifactPathName, file);
+                await github.rest.repos.uploadReleaseAsset({
+                  owner,
+                  repo,
+                  release_id: releaseId,
+                  name: file,
+                  data: await fs.readFile(artifactPathName + file)
+                });
+              }
+            }
