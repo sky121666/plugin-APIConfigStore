@@ -80,7 +80,7 @@ jobs:
     if: github.event_name == 'release'
     steps:
       - name: Download plugin-starter jar
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: plugin-APIConfigStore
           path: build/libs
