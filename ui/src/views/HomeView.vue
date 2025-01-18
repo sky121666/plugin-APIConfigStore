@@ -343,7 +343,6 @@ const handleUpdateItem = async (index: number) => {
   } catch (error) {
     console.error("获取 API 数据失败:", error);
     Toast.error("获取 API 数据失败", {duration: 5000});
-    // 可以选择显示错误提示给用户
   } 
 };
 
@@ -361,7 +360,6 @@ const handleDeleteItem = async (index: number) => {
   } catch (error) {
     Toast.error("数据删除失败", {duration: 5000});
     console.error("数据删除失败:", error);
-    // 可以选择显示错误提示给用户
   }
 };
 
