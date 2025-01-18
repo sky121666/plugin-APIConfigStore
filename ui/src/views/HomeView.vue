@@ -180,7 +180,7 @@ const hasNextPage = ref(false);
 // 数据列表
 const configList = ref<Config[]>([]);
 
-// 当前编辑或新增的配置项，使用 reactive 创建响应式对象
+// 当前新增的配置项，使用 reactive 创建响应式对象
 const currentConfig = reactive<Config & { identifierDisabled?: boolean }>({
   apiVersion: "api-configstore.halo.run/v1alpha1", // 请替换为您插件的 actual group
   kind: "Config",
@@ -357,7 +357,7 @@ const handleDeleteItem = async (index: number) => {
     Toast.success("删除成功", {duration: 5000});
     setTimeout(() => {
       fetchConfigList();
-    }, 800); // 延迟 500 毫秒后刷新列表
+    }, 800); // 延迟 800 毫秒后刷新列表
   } catch (error) {
     Toast.error("数据删除失败", {duration: 5000});
     console.error("数据删除失败:", error);
@@ -399,17 +399,16 @@ onMounted(fetchConfigList);
 </script>
 <style scoped>
 pre {
-  background-color: #f6f8fa; /* 设置浅灰色背景 */
-  border: 1px solid #d1d5da; /* 添加边框 */
-  border-radius: 4px; /* 圆角边框 */
-  padding: 10px; /* 内边距 */
-  font-family: "Courier New", Courier, monospace; /* 使用等宽字体 */
-  font-size: 14px; /* 调整字体大小 */
-  line-height: 1.5; /* 调整行高 */
-  overflow-x: auto; /* 水平滚动条 */
-  white-space: pre-wrap; /* 保留换行和空格 */
-  word-break: break-all; /* 长单词换行 */
-  tab-size: 2; /* 调整tab大小 */
-  color: #24292e; /* 设置字体颜色，使文字更清晰 */
+  background-color: #f6f8fa; 
+  border: 1px solid #d1d5da; 
+  border-radius: 4px; 
+  padding: 10px;
+  font-size: 14px;
+  line-height: 1.5; 
+  overflow-x: auto;
+  white-space: pre-wrap; 
+  word-break: break-all; 
+  tab-size: 2; 
+  color: #24292e; 
 }
 </style>
