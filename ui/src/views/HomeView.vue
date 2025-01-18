@@ -365,13 +365,13 @@ const handleDeleteItem = async (index: number) => {
 
 
 const previewModalVisible = ref(false);
-const formattedApiData = ref(""); // 使用 ref 存储获取到的 JSON 数据
+const formattedApiData = ref(""); 
 
 
 // 预览
 const handlePreviewItem = async (index: number) => {
   const config = configList.value[index];
-  formattedApiData.value = ""; // 清空之前的数据
+  formattedApiData.value = ""; 
   previewModalVisible.value = true;
   try {
     const response = await axiosInstance.get(
