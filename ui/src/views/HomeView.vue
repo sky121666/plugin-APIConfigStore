@@ -1,172 +1,416 @@
-<script setup lang="ts">
-import confetti from "canvas-confetti";
-import { onMounted } from "vue";
-import RiShareCircleLine from "~icons/ri/share-circle-line";
-import RiCodeBoxLine from "~icons/ri/code-box-line";
-import RiBookReadLine from "~icons/ri/book-read-line";
-import RiComputerLine from "~icons/ri/computer-line";
-import RiArrowRightSLine from "~icons/ri/arrow-right-s-line";
-
-onMounted(() => {
-  confetti({
-    particleCount: 100,
-    spread: 70,
-    origin: { y: 0.6, x: 0.58 },
-  });
-});
-</script>
-
 <template>
-  <section id="plugin-starter">
-    <div class="wrapper">
-      <span class="title"> 你已经成功运行起了插件！ </span>
-      <span class="message">你可以点击下方文档继续下一步</span>
-      <div class="docs">
-        <a
-          href="https://docs.halo.run/developer-guide/plugin/publish"
-          class="docs__box"
-          target="_blank"
-        >
-          <h2 class="docs__box-title"><RiShareCircleLine />发布一个插件</h2>
-          <span class="docs__box-message">
-            了解如何与我们的社区分享您的扩展。
-          </span>
-          <span class="docs__box-arrow">
-            <RiArrowRightSLine />
-          </span>
-        </a>
-        <a
-          href="https://docs.halo.run/category/%E5%9F%BA%E7%A1%80"
-          class="docs__box"
-          target="_blank"
-        >
-          <h2 class="docs__box-title"><RiComputerLine />基础概览</h2>
-          <span class="docs__box-message">
-            了解插件的项目结构、生命周期、资源配置等。
-          </span>
-          <span class="docs__box-arrow">
-            <RiArrowRightSLine />
-          </span>
-        </a>
-        <a
-          href="https://docs.halo.run/developer-guide/plugin/examples/todolist"
-          class="docs__box group"
-          target="_blank"
-        >
-          <h2 class="docs__box-title"><RiBookReadLine />示例插件</h2>
-          <span class="docs__box-message">帮助你从 0 到 1 完成一个插件。</span>
-          <span class="docs__box-arrow">
-            <RiArrowRightSLine />
-          </span>
-        </a>
-        <a
-          href="https://docs.halo.run/category/api-%E5%8F%82%E8%80%83"
-          class="docs__box"
-          target="_blank"
-        >
-          <h2 class="docs__box-title"><RiCodeBoxLine />API 参考</h2>
-          <span class="docs__box-message">插件中的 API 列表。</span>
-          <span class="docs__box-arrow">
-            <RiArrowRightSLine />
-          </span>
-        </a>
+  <VPageHeader title="API配置存储">
+    <template #actions>
+      <VButton type="secondary" @click="showModal">新增</VButton>
+    </template>
+  </VPageHeader>
+
+  <VModal
+    :visible="modalVisible"
+    title="API配置存储"
+    @close="handleCloseModal"
+    layerClosable
+    mount-to-body
+  >
+    <FormKit
+      type="text"
+      label="备注"
+      name="remark"
+      placeholder="请输入备注"
+      v-model="currentConfig.spec.remark"
+      validation="required"
+    />
+    <FormKit
+      type="text"
+      label="标识"
+      name="identifier"
+      placeholder="请输入标识（用于前端调用）"
+      v-model="currentConfig.spec.identifier"
+      validation="required|alphanumeric"
+      :disabled="currentConfig.identifierDisabled"
+    />
+ 
+      <FormKit
+        type="text"
+        label="API 地址"
+        name="apiAddress"
+        placeholder="请输入要获取的 API 地址"
+        v-model="currentConfig.spec.apiAddress"
+        validation="required|starts_with:/"
+        :validation-messages="{
+       regex: 'API 地址必须以 / 开头的内部地址',
+      }"
+      />
+  
+    
+    <FormKit
+      type="hidden"
+      name="apiData"
+      :value="currentConfig.spec.apiData"
+    />
+    <VSpace>
+      <VButton type="primary" @click="handleSubmit">提交</VButton>
+      <VButton @click="handleCloseModal">取消</VButton>
+    </VSpace>
+  </VModal>
+
+  <div class="m-0 md:m-4">
+
+    <VCard :body-class="['!p-0']">
+
+      <div v-if="configList.length === 0" class="p-4">
+        <VEmpty title="当前数据为空" message="点击新建进行创建">
+          <template #actions>
+            <VSpace>
+              <VButton type="secondary" @click="showModal">新建</VButton>
+            </VSpace>
+          </template>
+        </VEmpty>
       </div>
-    </div>
-  </section>
+
+      <Transition v-else appear name="fade">
+        <ul class="box-border h-full w-full divide-y divide-gray-100" role="list">
+          <li v-for="(item, index) in configList" :key="index">
+            <VEntity :inert="modalVisible">
+              <template #start>
+                <VEntityField :title="item.spec.remark"></VEntityField>
+              </template>
+              <template #end>
+                <VEntityField>
+                  <template #description>
+                    <VTag>{{ item.spec.identifier }}</VTag>
+                  </template>
+                </VEntityField>
+                <VEntityField>
+                  <template #description>
+                    <span class="truncate text-xs tabular-nums text-gray-500">
+                      {{ item.spec.apiAddress }}
+                    </span>
+                  </template>
+                </VEntityField>
+              </template>
+              <template #dropdownItems>
+                <VDropdownItem @click="handleEditItem(index)">编辑</VDropdownItem>
+                <VDropdownItem @click="handleUpdateItem(index)">刷新json</VDropdownItem>
+                <VDropdownItem @click="handlePreviewItem(index)">预览json</VDropdownItem>
+                <div class="my-1 h-[1px] w-full bg-gray-100"></div>
+                <VDropdownItem type="danger" @click="handleDeleteItem(index)">删除</VDropdownItem>
+              </template>
+            </VEntity>
+          </li>
+        </ul>
+      </Transition>
+
+      <template #footer>
+        <VPagination
+          v-model:page="currentPage"
+          v-model:size="pageSize"
+          :total="totalItems"
+          @update:page="handlePageChange"
+          @update:size="handleSizeChange"
+        />
+      </template>
+    </VCard>
+
+
+  </div>
+
+  <VModal :visible="previewModalVisible" title="JSON 数据预览" @close="previewModalVisible = false">
+    <pre v-if="!isLoading">{{ formattedApiData }}</pre>
+    <div v-else>加载中...</div>
+  </VModal>
 </template>
 
-<style lang="scss" scoped>
-#plugin-starter {
-  height: 100vh;
-  background-color: #f8fafc;
+<script setup lang="ts">
+import {ref, watch, reactive, onMounted, shallowRef} from 'vue';
+
+import { axiosInstance } from '@halo-dev/api-client';
+import {
+  VButton,
+  VModal,
+  VSpace,
+  VPageHeader,
+  VCard,
+  VEntityField,
+  VTag,
+  VDropdownItem,
+  VEntity,
+  VEmpty, VPagination,Toast,
+} from '@halo-dev/components';
+import { FormKit } from '@formkit/vue';
+import pinyin from 'pinyin';
+
+interface ConfigItem {
+  remark: string;
+  identifier: string;
+  apiAddress: string;
+  apiData?: string; // 可选，用于存储从 API 获取的 JSON 数据
 }
 
-.wrapper {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  gap: 1.5rem;
+interface Config {
+  apiVersion: string;
+  kind: string;
+  metadata: {
+    name: string;
+  };
+  spec: ConfigItem;
+}
 
-  .title {
-    font-weight: 700;
-    font-size: 1.25rem;
-    line-height: 1.75rem;
-  }
+interface ConfigPageResult {
+  page: number;
+  size: number;
+  total: number;
+  items: Config[];
+  first: boolean;
+  last: boolean;
+  hasNext: boolean;
+  hasPrevious: boolean;
+  totalPages: number;
+}
 
-  .message {
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-    color: #4b5563;
-  }
+const modalVisible = ref(false);
+// 当前页码
+const currentPage = ref(1);
+// 每页条数
+const pageSize = ref(10);
+// 总数据条数
+const totalItems = ref(0);
+// 是否有下一页
+const hasNextPage = ref(false);
+// 数据列表
+const configList = ref<Config[]>([]);
 
-  .docs {
-    display: grid;
-    grid-template-columns: repeat(1, minmax(0, 1fr));
-    gap: 1rem;
-    max-width: 48rem;
+// 当前编辑或新增的配置项，使用 reactive 创建响应式对象
+const currentConfig = reactive<Config & { identifierDisabled?: boolean }>({
+  apiVersion: "api-configstore.halo.run/v1alpha1", // 请替换为您插件的 actual group
+  kind: "Config",
+  metadata: {
+    name: "",
+  },
+  spec: {
+    remark: "",
+    identifier: "",
+    apiAddress: "",
+    apiData: "", 
+  },
+  identifierDisabled: false,
+});
 
-    .docs__box {
-      background-color: #fff;
-      border-radius: 0.375rem;
-      padding: 0.75rem;
-      transition-property: all;
-      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-      transition-duration: 300ms;
-      cursor: pointer;
-      filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.1))
-        drop-shadow(0 1px 1px rgb(0 0 0 / 0.06));
 
-      &:hover {
-        box-shadow:
-          0 0 0 0px #fff,
-          0 0 0 1px rgb(59 130 246 / 0.5),
-          0 0 #0000;
-      }
 
-      .docs__box-title {
-        display: flex;
-        flex-direction: row;
-        font-size: 1.125rem;
-        line-height: 1.75rem;
-        font-weight: 700;
-        margin-bottom: 2rem;
-        gap: 0.5rem;
-        align-items: center;
-      }
-
-      .docs__box-message {
-        font-size: 0.875rem;
-        line-height: 1.25rem;
-        color: #4b5563;
-      }
-
-      .docs__box-arrow {
-        pointer-events: none;
-        position: absolute;
-        top: 1rem;
-        right: 1rem;
-        transition-property: all;
-        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-        transition-duration: 150ms;
-        color: #d1d5db;
-      }
-
-      &:hover {
-        .docs__box-arrow {
-          color: #9ca3af;
-          transform: translate(00.375rem, 0) rotate(0) skewX(0) skewY(0)
-            scaleX(1) scaleY(1);
-        }
-      }
+// 监听 remark 变化，自动生成 identifier
+watch(
+  () => currentConfig.spec.remark,
+  (newVal) => {
+    // 仅在模态框打开且非编辑状态下自动生成 identifier
+    if (modalVisible.value === true && !currentConfig.identifierDisabled) {
+      currentConfig.spec.identifier = pinyin(newVal, {
+        style: pinyin.STYLE_NORMAL,
+      }).join("");
     }
   }
+);
 
-  @media (min-width: 640px) {
-    .docs {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
+// 获取配置列表数据
+const fetchConfigList = async () => {
+  try {
+    const response: { data: ConfigPageResult } = await axiosInstance.get(
+      `/apis/api-configstore.halo.run/v1alpha1/configs?page=${currentPage.value}&size=${pageSize.value}`
+    );
+    configList.value = response.data.items;
+    totalItems.value = response.data.total;
+    hasNextPage.value = response.data.hasNext;
+  } catch (error) {
+    console.error("获取配置列表失败:", error);
+    Toast.error("获取配置列表失败", { duration: 5000 });
   }
+};
+
+// 页码发生变化时调用
+const handlePageChange = (newPage: number) => {
+  currentPage.value = newPage;
+  fetchConfigList();
+};
+
+// 每页显示条数发生变化时调用
+const handleSizeChange = (newSize: number) => {
+  pageSize.value = newSize;
+  currentPage.value = 1; // 重置页码为 1
+  fetchConfigList();
+};
+
+// 显示模态框
+const showModal = () => {
+  // 重置 currentConfig 为初始状态，并启用 identifier 编辑
+  Object.assign(currentConfig, {
+    apiVersion: "api-configstore.halo.run/v1alpha1", 
+    kind: "Config",
+    metadata: {
+      name: "",
+    },
+    spec: {
+      remark: "",
+      identifier: "",
+      apiAddress: "",
+      apiData: "", 
+    },
+    identifierDisabled: false,
+  });
+  modalVisible.value = true;
+};
+
+// 关闭模态框
+const handleCloseModal = () => {
+  modalVisible.value = false;
+};
+
+// 使用 shallowRef 创建一个对原始配置的浅层引用
+const originalConfig = shallowRef<Config | null>(null);
+
+// 编辑配置项
+const handleEditItem = (index: number) => {
+  const config = configList.value[index];
+  // 深拷贝 config
+  originalConfig.value = JSON.parse(JSON.stringify(config));
+  // 复制选中的配置项到 currentConfig，并禁用 identifier 编辑
+  Object.assign(currentConfig, config, {
+    identifierDisabled: true,
+  });
+  modalVisible.value = true;
+};
+
+// 提交表单
+const handleSubmit = async () => {
+  try {
+    if (currentConfig.identifierDisabled) {
+      // 更新
+      const response = await axiosInstance.get(currentConfig.spec.apiAddress);
+      if (!response) {
+        return;
+      }
+      // 更新 apiData
+      currentConfig.spec.apiData = JSON.stringify(response.data);
+      await axiosInstance.put(
+        `/apis/api-configstore.halo.run/v1alpha1/configs/${currentConfig.metadata.name}`,
+        currentConfig
+      );
+      Toast.success("更新成功", { duration: 5000 });
+      console.log("更新成功");
+    } else {
+      // 新增
+      const response = await axiosInstance.get(currentConfig.spec.apiAddress);
+      if (!response) {
+        return;
+      }
+      const config: Config = {
+        apiVersion: "api-configstore.halo.run/v1alpha1",
+        kind: "Config",
+        metadata: {
+          name: currentConfig.spec.identifier,
+        },
+        spec: {
+          remark: currentConfig.spec.remark,
+          identifier: currentConfig.spec.identifier,
+          apiAddress: currentConfig.spec.apiAddress,
+          apiData: JSON.stringify(response.data, null, 2),
+        },
+      };
+      await axiosInstance.post(`/apis/api-configstore.halo.run/v1alpha1/configs`, config);
+      Toast.success("提交成功", { duration: 5000 });
+      console.log("提交成功");
+    }
+    handleCloseModal();
+    await fetchConfigList();
+  } catch (error) {
+    Toast.error("数据保存或更新失败", { duration: 5000 });
+    console.error("数据保存或更新失败:", error);
+  }
+};
+// 更新json
+const handleUpdateItem = async (index: number) => {
+  isLoading.value = true; // 开始加载
+  const config = configList.value[index];
+  try {
+    // 使用 axiosInstance 获取数据
+    const response = await axiosInstance.get(config.spec.apiAddress);
+
+    await  axiosInstance.put(
+      `/apis/api-configstore.halo.run/v1alpha1/configs/${config.metadata.name}`,
+      {...config,spec:{...config.spec, apiData: JSON.stringify(response.data) }}
+    );
+    // 更新成功后，可以根据需要进行提示或其他操作
+    Toast.success("JSON 数据刷新成功", {duration: 5000});
+    console.log("JSON 数据刷新成功");
+  } catch (error) {
+    console.error("获取 API 数据失败:", error);
+    Toast.error("获取 API 数据失败", {duration: 5000});
+    // 可以选择显示错误提示给用户
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+
+
+// 删除配置项
+const handleDeleteItem = async (index: number) => {
+  try {
+    const name = configList.value[index].metadata.name;
+    await axiosInstance.delete(`/apis/api-configstore.halo.run/v1alpha1/configs/${name}`);
+    Toast.success("删除成功", {duration: 5000});
+    setTimeout(() => {
+      fetchConfigList();
+    }, 800); // 延迟 500 毫秒后刷新列表
+  } catch (error) {
+    Toast.error("数据删除失败", {duration: 5000});
+    console.error("数据删除失败:", error);
+    // 可以选择显示错误提示给用户
+  }
+};
+
+
+
+const previewModalVisible = ref(false);
+const formattedApiData = ref(""); // 使用 ref 存储获取到的 JSON 数据
+const isLoading = ref(false); // 新增一个状态来表示是否正在加载
+
+// 预览
+const handlePreviewItem = async (index: number) => {
+  const config = configList.value[index];
+  formattedApiData.value = ""; // 清空之前的数据
+  previewModalVisible.value = true;
+  isLoading.value = true; // 开始加载
+  try {
+    const response = await axiosInstance.get(
+      `/apis/api-configstore.halo.run/v1alpha1/configs/${config.metadata.name}`
+    );
+    const apiDataObj = JSON.parse(response.data.spec.apiData);
+    formattedApiData.value = JSON.stringify(apiDataObj, null, 2);
+
+  } catch (error) {
+    console.error("获取 API 数据失败:", error);
+    formattedApiData.value = "获取 JSON 数据失败";
+    Toast.error("获取 API 数据失败", {duration: 5000});
+  } finally {
+    isLoading.value = false; // 加载结束
+  }
+};
+
+onMounted(fetchConfigList);
+</script>
+<style scoped>
+pre {
+  background-color: #f6f8fa; /* 设置浅灰色背景 */
+  border: 1px solid #d1d5da; /* 添加边框 */
+  border-radius: 4px; /* 圆角边框 */
+  padding: 10px; /* 内边距 */
+  font-family: "Courier New", Courier, monospace; /* 使用等宽字体 */
+  font-size: 14px; /* 调整字体大小 */
+  line-height: 1.5; /* 调整行高 */
+  overflow-x: auto; /* 水平滚动条 */
+  white-space: pre-wrap; /* 保留换行和空格 */
+  word-break: break-all; /* 长单词换行 */
+  tab-size: 2; /* 调整tab大小 */
+  color: #24292e; /* 设置字体颜色，使文字更清晰 */
 }
 </style>
