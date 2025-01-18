@@ -1,0 +1,5 @@
+{
+	"dependencies": {
+		"@formkit/vue": "^1.6.9"
+	}
+}
