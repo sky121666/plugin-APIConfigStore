@@ -128,7 +128,7 @@ jobs:
               console.log('Artifact file exists.');
             } catch (error) {
               console.error('Artifact file does not exist:', error);
-              return 1; // 退出脚本并标记为失败
+              return 1; 
             }
             
             // 6. 使用 github.rest.repos.uploadReleaseAsset 上传文件
