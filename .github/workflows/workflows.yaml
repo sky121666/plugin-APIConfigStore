@@ -25,7 +25,7 @@ jobs:
         with:
           submodules: true
       - name: Set up JDK 17
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v4
         with:
           distribution: "temurin"
           cache: "gradle"
@@ -44,7 +44,6 @@ jobs:
         id: pnpm-cache
         shell: bash
         run: |
-          # 使用 GITHUB_OUTPUT 替换 set-output
           echo "pnpm_cache_dir=$(pnpm store path)" >> "$GITHUB_OUTPUT"
       - name: Setup pnpm cache
         uses: actions/cache@v3
