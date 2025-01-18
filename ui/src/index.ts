@@ -7,17 +7,16 @@ export default definePlugin({
   components: {},
   routes: [
     {
-      parentName: "Root",
+      parentName: "ToolsRoot",
       route: {
-        path: "/example",
-        name: "Example",
+        path: "/api-configstore",
+        name: "APIConfigStore",
         component: HomeView,
         meta: {
-          title: "示例页面",
+          title: "API配置存储",
           searchable: true,
           menu: {
-            name: "示例页面",
-            group: "示例分组",
+            name: "API配置存储",
             icon: markRaw(IconPlug),
             priority: 0,
           },
