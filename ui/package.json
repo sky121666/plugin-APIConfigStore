@@ -14,7 +14,9 @@
     "@halo-dev/console-shared": "^2.17.0",
     "axios": "^1.7.2",
     "canvas-confetti": "^1.9.3",
-    "vue": "^3.4.31"
+    "vue": "^3.4.31",
+    "@formkit/vue": "^1.6.9",
+    "pinyin": "3"
   },
   "devDependencies": {
     "@halo-dev/ui-plugin-bundler-kit": "^2.17.0",

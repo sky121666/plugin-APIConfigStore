@@ -29,20 +29,20 @@
       validation="required|alphanumeric"
       :disabled="currentConfig.identifierDisabled"
     />
- 
-      <FormKit
-        type="text"
-        label="API 地址"
-        name="apiAddress"
-        placeholder="请输入要获取的 API 地址"
-        v-model="currentConfig.spec.apiAddress"
-        validation="required|starts_with:/"
-        :validation-messages="{
+
+    <FormKit
+      type="text"
+      label="API 地址"
+      name="apiAddress"
+      placeholder="请输入要获取的 API 地址"
+      v-model="currentConfig.spec.apiAddress"
+      validation="required|starts_with:/"
+      :validation-messages="{
        regex: 'API 地址必须以 / 开头的内部地址',
       }"
-      />
-  
-    
+    />
+
+
     <FormKit
       type="hidden"
       name="apiData"
@@ -116,8 +116,8 @@
   </div>
 
   <VModal :visible="previewModalVisible" title="JSON 数据预览" @close="previewModalVisible = false">
-    <pre v-if="!isLoading">{{ formattedApiData }}</pre>
-    <div v-else>加载中...</div>
+    <pre>{{ formattedApiData }}</pre>
+   
   </VModal>
 </template>
 
@@ -191,7 +191,7 @@ const currentConfig = reactive<Config & { identifierDisabled?: boolean }>({
     remark: "",
     identifier: "",
     apiAddress: "",
-    apiData: "", 
+    apiData: "",
   },
   identifierDisabled: false,
 });
@@ -243,7 +243,7 @@ const handleSizeChange = (newSize: number) => {
 const showModal = () => {
   // 重置 currentConfig 为初始状态，并启用 identifier 编辑
   Object.assign(currentConfig, {
-    apiVersion: "api-configstore.halo.run/v1alpha1", 
+    apiVersion: "api-configstore.halo.run/v1alpha1",
     kind: "Config",
     metadata: {
       name: "",
@@ -252,7 +252,7 @@ const showModal = () => {
       remark: "",
       identifier: "",
       apiAddress: "",
-      apiData: "", 
+      apiData: "",
     },
     identifierDisabled: false,
   });
@@ -328,7 +328,6 @@ const handleSubmit = async () => {
 };
 // 更新json
 const handleUpdateItem = async (index: number) => {
-  isLoading.value = true; // 开始加载
   const config = configList.value[index];
   try {
     // 使用 axiosInstance 获取数据
@@ -345,9 +344,7 @@ const handleUpdateItem = async (index: number) => {
     console.error("获取 API 数据失败:", error);
     Toast.error("获取 API 数据失败", {duration: 5000});
     // 可以选择显示错误提示给用户
-  } finally {
-    isLoading.value = false;
-  }
+  } 
 };
 
 
@@ -372,28 +369,30 @@ const handleDeleteItem = async (index: number) => {
 
 const previewModalVisible = ref(false);
 const formattedApiData = ref(""); // 使用 ref 存储获取到的 JSON 数据
-const isLoading = ref(false); // 新增一个状态来表示是否正在加载
+
 
 // 预览
 const handlePreviewItem = async (index: number) => {
   const config = configList.value[index];
   formattedApiData.value = ""; // 清空之前的数据
   previewModalVisible.value = true;
-  isLoading.value = true; // 开始加载
   try {
     const response = await axiosInstance.get(
       `/apis/api-configstore.halo.run/v1alpha1/configs/${config.metadata.name}`
     );
     const apiDataObj = JSON.parse(response.data.spec.apiData);
-    formattedApiData.value = JSON.stringify(apiDataObj, null, 2);
+    if(!apiDataObj) {
+      formattedApiData.value = ("数据为空");
+    }else{
+      formattedApiData.value = JSON.stringify(apiDataObj, null, 2);
+    }
+   
 
   } catch (error) {
     console.error("获取 API 数据失败:", error);
     formattedApiData.value = "获取 JSON 数据失败";
     Toast.error("获取 API 数据失败", {duration: 5000});
-  } finally {
-    isLoading.value = false; // 加载结束
-  }
+  } 
 };
 
 onMounted(fetchConfigList);
