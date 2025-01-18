@@ -65,7 +65,7 @@ jobs:
           version=${version#v}
           sed -i "s/version=.*-SNAPSHOT$/version=$version/1" gradle.properties
           ./gradlew clean build -x test
-      - name: Archive plugin-starter jar
+      - name: Archive plugin-APIConfigStore jar
         uses: actions/upload-artifact@v4
         with:
           name: plugin-APIConfigStore
@@ -78,7 +78,7 @@ jobs:
     needs: build
     if: github.event_name == 'release'
     steps:
-      - name: Download plugin-starter jar
+      - name: Download plugin-APIConfigStore jar
         uses: actions/download-artifact@v4
         with:
           name: plugin-APIConfigStore
@@ -99,28 +99,49 @@ jobs:
           echo "artifact_name=${ARTIFACT_NAME}" >> "$GITHUB_OUTPUT"
           echo "release_id=${{ github.event.release.id }}" >> "$GITHUB_OUTPUT"
       - name: Upload a Release Asset
-        uses: actions/github-script@v4
+        uses: actions/github-script@v6
         if: github.event_name == 'release'
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
-            console.log('environment', process.versions);
-
-            const fs = require('fs').promises;
-
-            const { repo: { owner, repo }, sha } = context;
-            console.log({ owner, repo, sha });
-
-            # 从 GITHUB_OUTPUT 中获取 releaseId
-            const releaseId = process.env.RELEASE_ID
-            # 从 GITHUB_ENV 中获取 artifactPathName 和 artifactName
-            const artifactPathName = process.env.ARTIFACT_PATHNAME
-            const artifactName = process.env.ARTIFACT_NAME
-            console.log('Releasing', releaseId, artifactPathName, artifactName)
-
-            await github.repos.uploadReleaseAsset({
-              owner, repo,
-              release_id: releaseId,
-              name: artifactName,
-              data: await fs.readFile(artifactPathName)
-            });
+            // 2. 使用严谨的 console.log 和注释，帮助调试
+            console.log('GitHub Script environment:', process.versions);
+            
+            const fs = require('fs').promises; // 使用 promises 版本的 fs 模块
+            
+            const { owner, repo } = context.repo; // 3. 更简洁的获取 owner 和 repo 的方式
+            
+            console.log('Repository:', { owner, repo });
+            
+            // 4. 使用更明确的变量名，并从 GITHUB_ENV 获取变量
+            const releaseId = process.env.RELEASE_ID;
+            const artifactPathName = process.env.ARTIFACT_PATHNAME;
+            const artifactName = process.env.ARTIFACT_NAME;
+            
+            console.log('Release ID:', releaseId);
+            console.log('Artifact Path:', artifactPathName);
+            console.log('Artifact Name:', artifactName);
+            
+            // 5. 检查文件是否存在 (可选，根据你的需要添加)
+            try {
+              await fs.access(artifactPathName);
+              console.log('Artifact file exists.');
+            } catch (error) {
+              console.error('Artifact file does not exist:', error);
+              return 1; // 退出脚本并标记为失败
+            }
+            
+            // 6. 使用 github.rest.repos.uploadReleaseAsset 上传文件
+            try {
+              const uploadResponse = await github.rest.repos.uploadReleaseAsset({
+                owner,
+                repo,
+                release_id: releaseId,
+                name: artifactName,
+                data: await fs.readFile(artifactPathName)
+              });
+              console.log('Successfully uploaded release asset:', uploadResponse.data.browser_download_url);
+            } catch (error) {
+              console.error('Error uploading release asset:', error);
+              core.setFailed(error.message); // 7. 使用 core.setFailed 标记错误
+            }
