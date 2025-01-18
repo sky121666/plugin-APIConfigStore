@@ -330,7 +330,6 @@ const handleSubmit = async () => {
 const handleUpdateItem = async (index: number) => {
   const config = configList.value[index];
   try {
-    // 使用 axiosInstance 获取数据
     const response = await axiosInstance.get(config.spec.apiAddress);
 
     await  axiosInstance.put(
