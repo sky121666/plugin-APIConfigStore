@@ -1,0 +1,49 @@
+name: Build Plugin JAR File for Main Branch
+
+on:
+  push:
+    branches:
+      - main # 仅在 main 分支推送代码时触发
+    paths:
+      - "**"
+      - "!**.md" # 忽略 Markdown 文件的更改
+  release:
+    types:
+      - created # 仅在创建 Release 时触发
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+      - name: Cache Gradle packages # 添加 Gradle 缓存
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+      - name: Build with Gradle
+        run: ./gradlew bootJar --no-daemon
+      - name: Copy jar to workspace
+        run: mkdir -p ./dist && cp ./build/libs/*.jar ./dist
+      - name: Upload production artifacts # 将构建产物上传，便于在 release 中使用
+        if: github.event_name == 'release'
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist
+          path: ./dist
+          retention-days: 7
+      - name: Release # 创建 Release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ./dist/*.jar
