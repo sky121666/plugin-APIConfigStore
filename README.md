@@ -38,8 +38,11 @@ ${APIConfigStoreDataFinder.get('这个地方填写你的标识')}
             <p th:text="${customData.identifier}"></p>
             <p th:text="${customData.apiAddress}"></p>
             <p th:text="${customData.apiData}"></p>
+            <p th:text="${customData.apiData.basic.withReplies}"></p>
         </div>
 ```
+![image](https://github.com/user-attachments/assets/85fe075c-5bff-4972-8383-45598598b09a)
+
 
 ## 开发环境
 
