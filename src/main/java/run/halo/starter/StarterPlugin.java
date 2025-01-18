@@ -1,8 +1,11 @@
 package run.halo.starter;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import run.halo.app.extension.SchemeManager;
 import run.halo.app.plugin.BasePlugin;
 import run.halo.app.plugin.PluginContext;
+import run.halo.starter.config.Config;
 
 /**
  * <p>Plugin main class to manage the lifecycle of the plugin.</p>
@@ -14,6 +17,8 @@ import run.halo.app.plugin.PluginContext;
  */
 @Component
 public class StarterPlugin extends BasePlugin {
+    @Autowired
+    private SchemeManager schemeManager;
 
     public StarterPlugin(PluginContext pluginContext) {
         super(pluginContext);
@@ -22,6 +27,7 @@ public class StarterPlugin extends BasePlugin {
     @Override
     public void start() {
         System.out.println("插件启动成功！");
+        schemeManager.register(Config.class);
     }
 
     @Override
