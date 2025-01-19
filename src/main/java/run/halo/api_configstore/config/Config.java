@@ -1,4 +1,4 @@
-package run.halo.starter.config;  // 请替换为你的插件包名
+package run.halo.api_configstore.config;  // 请替换为你的插件包名
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;

@@ -1,4 +1,4 @@
-package run.halo.starter.finder;
+package run.halo.api_configstore.finder;
 
 import lombok.Data;
 

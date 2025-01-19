@@ -1,4 +1,4 @@
-package run.halo.starter.finder;
+package run.halo.api_configstore.finder;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import run.halo.app.theme.finders.Finder;
-import run.halo.starter.config.ConfigService;
+import run.halo.api_configstore.config.ConfigService;
 
 @Component
 @Finder("APIConfigStoreDataFinder")

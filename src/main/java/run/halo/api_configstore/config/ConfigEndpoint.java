@@ -1,4 +1,4 @@
-package run.halo.starter.config;
+package run.halo.api_configstore.config;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;

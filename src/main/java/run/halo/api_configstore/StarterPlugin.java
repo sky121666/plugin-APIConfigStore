@@ -1,11 +1,11 @@
-package run.halo.starter;
+package run.halo.api_configstore;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import run.halo.app.extension.SchemeManager;
 import run.halo.app.plugin.BasePlugin;
 import run.halo.app.plugin.PluginContext;
-import run.halo.starter.config.Config;
+import run.halo.api_configstore.config.Config;
 
 @Component
 public class StarterPlugin extends BasePlugin {
