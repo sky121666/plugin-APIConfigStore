@@ -86,15 +86,15 @@ jobs:
       - name: Get Name of Artifact
         id: get_artifact
         run: |
-          ARTIFACT_PATHNAME=$(ls build/libs/*.jar | head -n 1)
+          REPO_NAME=${{ github.event.repository.name }}
+          echo "Repository name: ${REPO_NAME}"
+          ARTIFACT_PATHNAME=$(ls build/libs/${REPO_NAME}*.jar | head -n 1)
           ARTIFACT_NAME=$(basename ${ARTIFACT_PATHNAME})
           echo "Artifact pathname: ${ARTIFACT_PATHNAME}"
           echo "Artifact name: ${ARTIFACT_NAME}"
-          # 设置环境变量，用于当前步骤和后续步骤
           echo "ARTIFACT_PATHNAME=${ARTIFACT_PATHNAME}" >> "$GITHUB_ENV"
           echo "ARTIFACT_NAME=${ARTIFACT_NAME}" >> "$GITHUB_ENV"
           echo "RELEASE_ID=${{ github.event.release.id }}" >> "$GITHUB_ENV"
-          # 设置输出参数，用于后续步骤
           echo "artifact_pathname=${ARTIFACT_PATHNAME}" >> "$GITHUB_OUTPUT"
           echo "artifact_name=${ARTIFACT_NAME}" >> "$GITHUB_OUTPUT"
           echo "release_id=${{ github.event.release.id }}" >> "$GITHUB_OUTPUT"
