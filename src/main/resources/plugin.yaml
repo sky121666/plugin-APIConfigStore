@@ -11,7 +11,7 @@ spec:
   author:
     name: sky
     website: https://www.5ee.net
-  logo: https://www.5ee.net/500.jpg
+  logo: logo.png
   homepage: https://github.com/sky121666/plugin-APIConfigStore#readme
   repo: https://github.com/sky121666/plugin-APIConfigStore
   issues: https://github.com/sky121666/plugin-APIConfigStore/issues
